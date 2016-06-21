@@ -3,14 +3,15 @@
 from collections import deque
 import numpy as np
 import argparse
-import imutils
+#import imutils
 import cv2
-import datetime
+from datetime import datetime
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video",
 	help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=50,
+ap.add_argument("-b", "--buffer", type=int, default=3,
 	help="max buffer size")
 args = vars(ap.parse_args())
 
@@ -23,13 +24,15 @@ args = vars(ap.parse_args())
 #greenUpper = (64, 255, 255)
 
 #cap of bottle(Arkya)
-greenLower = (74,175,127)
-greenUpper = (158,255,255)
+greenLower = (94,95,170)
+greenUpper = (108,170,255)
 
 #black colour
 
 pts = deque(maxlen=args["buffer"])
- 
+pts.appendleft([0,0])
+pts.appendleft([0,0])
+pts.appendleft([0,0]) 
 # if a video path was not supplied, grab the reference
 # to the webcam
 if not args.get("video", False):
@@ -40,9 +43,19 @@ else:
 	camera = cv2.VideoCapture(args["video"])
 	
 # keep looping
-print(datetime.datetime.now())
-while True:
-	print(ctr)
+print(datetime.now())
+
+
+pos=[0,0]
+vel=[0,0]
+
+
+
+
+ctr =0
+while ctr<500:
+        ctr=ctr+1
+	#print(ctr)
 	# grab the current frame
 	(grabbed, frame) = camera.read()
  
@@ -53,7 +66,7 @@ while True:
  
 	# resize the frame, blur it, and convert it to the HSV
 	# color space
-	frame = imutils.resize(frame, width=600)
+	#frame = imutils.resize(frame, width=600)
 	# blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
  
@@ -90,17 +103,26 @@ while True:
  
 	# update the points queue
 	pts.appendleft(center)
+	pos=center
+	if pts[0] is not None and pts[1] is not None:
+	   vel[0]=pts[0][0]-pts[1][0]
+	   vel[1]=pts[0][1]-pts[1][1]
+	
+	#print pos
+	print vel
+	
+	
 	# loop over the set of tracked points
-	for i in xrange(1, len(pts)):
+	#for i in xrange(1, len(pts)):
 		# if either of the tracked points are None, ignore
 		# them
-		if pts[i - 1] is None or pts[i] is None:
-			continue
+		#if pts[i - 1] is None or pts[i] is None:
+			#continue
  
 		# otherwise, compute the thickness of the line and
 		# draw the connecting lines
-		thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
-		cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
+		#thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
+		#cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
  
 	# show the frame to our screen
 	cv2.imshow("Frame", frame)
@@ -110,7 +132,7 @@ while True:
 	if key == ord("q"):
 		break
  
-print(datetime.datetime.now())
+print(datetime.now())
 
 # cleanup the camera and close any open windows
 camera.release()
