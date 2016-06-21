@@ -97,7 +97,6 @@ while ctr<500:
 		if radius > 10:
 			# draw the circle and centroid on the frame,
 			# then update the list of tracked points
-			
 			cv2.circle(frame, (int(x), int(y)), int(radius),
 				(0, 255, 255), 2)
 			cv2.circle(frame, center, 5, (0, 0, 255), -1)
@@ -110,7 +109,7 @@ while ctr<500:
 	   vel[1]=pts[0][1]-pts[1][1]
 	
 	#print pos
-	#print vel
+	print vel
 	
 	
 	# loop over the set of tracked points
@@ -126,7 +125,6 @@ while ctr<500:
 		#cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
  
 	# show the frame to our screen
-	
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
  
