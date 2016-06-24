@@ -9,15 +9,17 @@ import cv2
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video",
 	help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=1,
+ap.add_argument("-b", "--buffer", type=int, default=10,
 	help="max buffer size")
 args = vars(ap.parse_args())
 
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower = (21, 90, 180)
-greenUpper = (40, 221, 255)
+
+#these are for the dark green ball
+greenLower = (42, 81, 211)
+greenUpper = (69, 176, 255)
 pts = deque(maxlen=args["buffer"])
 
 # if a video path was not supplied, grab the reference
@@ -42,7 +44,7 @@ while True:
 	# resize the frame, blur it, and convert it to the HSV
 	# color space
 	frame = imutils.resize(frame, width=600)
-	# blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
 	# construct a mask for the color "green", then perform
@@ -69,7 +71,7 @@ while True:
 		center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
 		# only proceed if the radius meets a minimum size
-		if radius > 10:
+		if radius > 2:
 			# draw the circle and centroid on the frame,
 			# then update the list of tracked points
 			cv2.circle(frame, (int(x), int(y)), int(radius),
