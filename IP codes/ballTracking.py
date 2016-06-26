@@ -30,8 +30,11 @@ ser = serial.Serial('/dev/ttyACM0', 9600)
 #greenUpper = (64, 255, 255)
 
 #cap of bottle(Arkya)
-greenLower = (94,95,170)
-greenUpper = (108,170,255)
+#greenLower = (94,95,170)
+#greenUpper = (108,170,255)
+#deepgreen ball
+greenLower = (40,45,155)
+greenUpper = (56,176,255)
 
 #black colour
 
@@ -60,22 +63,33 @@ posx=0
 posy=0
 vel=[0,0]
 ################################       finding origin
-originLower=(0,0,0)
-originUpper=(99,99,99)
-(grabbed, frame) = camera.read()
-blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-mask = cv2.inRange(hsv, originLower, originUpper)
-mask = cv2.erode(mask, None, iterations=2)
-mask = cv2.dilate(mask, None, iterations=2)
-t = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
-origin = None
-if len(t) == 0:
-	c = max(t, key=cv2.contourArea)
-	((x, y), radius) = cv2.minEnclosingCircle(c)
-	M = cv2.moments(c)
-	origin = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+
+originLower=(90,110,186)
+originUpper=(106,244,246)
+tryc=1
+while tryc>0:
+	tryc=tryc+1
+	(grabbed, frame) = camera.read()
+	#blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+	mask = cv2.inRange(hsv, originLower, originUpper)
+	mask = cv2.erode(mask, None, iterations=2)
+	mask = cv2.dilate(mask, None, iterations=2)
+	t = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+	(originx,originy) = (100,100)
+
+	print(tryc)
+	if len(t) > 0:
+		c = max(t, key=cv2.contourArea)
+		((x, y), radius) = cv2.minEnclosingCircle(c)
+		M = cv2.moments(c)
+		(originx,originy) = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+		print("origin detected")
+		break
 ################################
+
+
+
 ################################             Motor control parameters
 A=99
 attaker=7
@@ -83,14 +97,14 @@ M=99
 midfield=5
 D=99
 defender=3
-G=99
+G=580
 goalkeeper=1
 
-Xlen=640
-Ylen=480
+Xlen=600
+Ylen=400
 
 trigdist=99
-stepper=[0,0,0,0]
+stepper=[0,0,0,127]
 
 ################################
 
@@ -98,10 +112,9 @@ stepper=[0,0,0,0]
 
 
 ctr =0
-while ctr<500:
+while True:
 	ctr=ctr+1
 	#print(ctr)
-
 	# grab the current frame
 	(grabbed, frame) = camera.read()
  
@@ -140,24 +153,30 @@ while ctr<500:
 		center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
  
 		# only proceed if the radius meets a minimum size
-		if radius > 10:
+		if radius > 1:
 			# draw the circle and centroid on the frame,
 			# then update the list of tracked points
 			
 			cv2.circle(frame, (int(x), int(y)), int(radius),
 				(0, 255, 255), 2)
 			cv2.circle(frame, center, 5, (0, 0, 255), -1)
- 
+ 			cv2.line(frame,(G,100),(G,440), (0, 0, 255),2)
+
+ 			cv2.line(frame,(originx,originy),(originx+Xlen,originy), (0, 10, 255),1)
+ 			cv2.line(frame,(originx,originy),(originx,originy+Ylen), (0, 10, 255),1)
+
+
+ 	#############################           position storing		
 	# update the points queue
 	pts.appendleft(center)
 	#pos=center
 	if pts[0] is not None and pts[1] is not None:
-		posx=pts[0][0]
-		posy=pts[0][1]
+		posx=pts[0][0]-originx
+		posy=pts[0][1]-originy
 		vel[0]=pts[0][0]-pts[1][0]
 		vel[1]=pts[0][1]-pts[1][1]
 	
-	#print pos
+	#print ("%d   %d" %(posx,posy))
 	#print vel
 
 
@@ -168,30 +187,27 @@ while ctr<500:
 
 	
 	##### goalkeeper
-	y_est=(int)( Ylen/2+((posy-Ylen)/(posx-Xlen))*(G-Xlen) )
-	val=stepper[3]-y_est+240  #to make it +ve
-	val=val*10+goalkeeper
-	ser.write(str(val).encode())
 
-	if abs(stepper[3]-posy)<10 and (G-posx)<trigdist: #save goal
-		ser.write(str(902).encode())
+	#y_est=(int)( Ylen/2+((posy-Ylen)/(posx-Xlen))*(G-Xlen) )
+	if posy>127 and posy<238:
+		y_est=posy
+	elif posy>=238:
+		y_est=237
+	elif posy<=127:
+		y_est=128
+	#val=stepper[3]-y_est  #in pixels
+	#stepper[3]+=val
+	val=y_est*10+goalkeeper
+	temp=str(val)#.encode()
+	ser.write(temp)
+	print("%d   %d" %(posy,val))
 
-
-
-
-
-
-
-
-
-
-
-
+	#if abs(stepper[3]-posy)<10 and (G-posx)<trigdist: #save goal
+		#ser.write(str(902).encode())
 
 
 
 
-	
 	
 	# loop over the set of tracked points
 	#for i in xrange(1, len(pts)):
