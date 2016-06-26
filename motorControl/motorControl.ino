@@ -6,8 +6,9 @@
 #define microSteps 1 // determines speed of stepper, to be kept full, i.e. 1
 
 //to be filled in....
-int dirPin[4]={1,2,3,4};//arbit values to be replaced later
-int stepPin[4]={5,6,7,8};//arbit values to be replaced later
+int dirPin[4]={22,23,24,25};//arbit values to be replaced later
+int stepPin[4]={26,27,28,29};//arbit values to be replaced later
+int stepperPos[4]={0,0,0,128};
 BasicStepperDriver steppers[4] = {
       BasicStepperDriver(motorSteps, dirPin[0], stepPin[0]),
       BasicStepperDriver(motorSteps, dirPin[1], stepPin[1]),
@@ -26,7 +27,7 @@ void setup()
   for(int i=0;i<4;i++){
     servos[i].attach(9+i); //arbit pin attachment, reset later
     servos[i].write(servoPosition[i]);
-    steppers[i].setRPM(200); //set to desired value later
+    steppers[i].setRPM(40); //set to desired value later
     steppers[i].setMicrostep(microSteps);
   }
 }
@@ -37,19 +38,24 @@ void loop()
     // read the incoming integer:
     incomingInt = Serial.parseInt();
     motorNum=((int) abs(incomingInt))%10;
+    Serial.println(motorNum+"     "+val);
 //I'm going to number steppers as odd numbers, and servos even 
     val=(int)incomingInt/10;
-    
     switch(motorNum){
       case 1:
       case 3:
       case 5:
-      case 7:steppers[motorNum/2].rotate(val);
-            break;
+      case 7:
+              //steppers[motorNum/2].rotate((int)(val-stepperPos[3])*1700/110);
+              steppers[motorNum/2].rotate((int)200);
+              stepperPos[3]=val;
+              delay(20);
+              break;
       case 2:
       case 4:
       case 6:
       case 8:servoPosition[motorNum/2-1]=val;
+      delay(5);
             break;
     }
     
