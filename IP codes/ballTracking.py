@@ -4,8 +4,9 @@ from collections import deque
 import numpy as np
 import argparse
 #import imutils
+from time import sleep
 import cv2
-import serial
+import serial   #PySerial package needs to be insatllled
 
 from datetime import datetime
 
@@ -20,6 +21,8 @@ args = vars(ap.parse_args())
 #ser = serial.Serial(port='COM3',baudrate=9600,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,\
 #    bytesize=serial.EIGHTBITS,timeout=0)
 ser = serial.Serial('/dev/ttyACM0', 9600)
+
+sleep(0.2) #delay to allow arduino to reset
 
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
@@ -195,12 +198,17 @@ while True:
 		y_est=237
 	elif posy<=127:
 		y_est=128
-	#val=stepper[3]-y_est  #in pixels
-	#stepper[3]+=val
+
 	val=y_est*10+goalkeeper
-	temp=str(val)#.encode()
-	ser.write(temp)
-	print("%d   %d" %(posy,val))
+	temp=str(val).encode()
+
+	'''val=int((y_est-128)/5)
+	temp=val*10+goalkeeper'''
+	ser.write(temp) #testing with the modulus
+	#print("%d   %d" %(posy,val))
+	print ser.readline() # Read the newest output from the Arduino
+	#sleep(.01) # Delay for one tenth of a second
+
 
 	#if abs(stepper[3]-posy)<10 and (G-posx)<trigdist: #save goal
 		#ser.write(str(902).encode())
