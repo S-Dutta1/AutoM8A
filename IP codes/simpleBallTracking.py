@@ -18,8 +18,8 @@ args = vars(ap.parse_args())
 # list of tracked points
 
 #these are for the dark green ball
-greenLower = (42, 81, 211)
-greenUpper = (69, 176, 255)
+greenLower = (38,81,107)#(42, 81, 211)
+greenUpper = (73,229,255)#(69, 176, 255)
 pts = deque(maxlen=args["buffer"])
 
 # if a video path was not supplied, grab the reference
