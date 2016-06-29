@@ -8,7 +8,7 @@
 //to be filled in....
 int dirPin[4]={22,23,24,25};//arbit values to be replaced later
 int stepPin[4]={26,27,28,29};//arbit values to be replaced later
-int stepperPos[4]={0,0,0,128};
+int stepperPos[4]={127,0,0,0};
 BasicStepperDriver steppers[4] = {
       BasicStepperDriver(motorSteps, dirPin[0], stepPin[0]),
       BasicStepperDriver(motorSteps, dirPin[1], stepPin[1]),
@@ -18,16 +18,18 @@ BasicStepperDriver steppers[4] = {
 int servoPosition[4]={90,90,90,90}; //initial arbit setting, to be replaced later
 Servo servos[4]; //array of servos
 
-long incomingInt = 0;   // for incoming serial data
+unsigned int incomingInt = 0;   // for incoming serial data
+char incomingByte;
 int motorNum,val;
+
 
 void setup()
 {
-  Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
+  Serial.begin(57600); // opens serial port, sets data rate to 9600 bps
   for(int i=0;i<4;i++){
     servos[i].attach(9+i); //arbit pin attachment, reset later
     servos[i].write(servoPosition[i]);
-    steppers[i].setRPM(40); //set to desired value later
+    steppers[i].setRPM(300); //set to desired value later
     steppers[i].setMicrostep(microSteps);
   }
 }
@@ -36,31 +38,43 @@ void loop()
 {
   if (Serial.available() > 0) {
     // read the incoming integer:
-    incomingInt = Serial.parseInt();
+    incomingInt = 0;         // throw away previous incomingInt
+    while(1) {            // force into a loop until 'n' is received
+      incomingByte = Serial.read();
+      if (incomingByte == '\n') break;   // exit the while(1), we're done receiving
+      if (incomingByte == -1) continue;  // if no characters are in the buffer read() returns -1
+      incomingInt *= 10;  // shift left 1 decimal place
+      // convert ASCII to integer, add, and shift left 1 decimal place
+      incomingInt = ((incomingByte - 48) + incomingInt);
+    }
+    
     motorNum=((int) abs(incomingInt))%10;
-    Serial.println(motorNum+"     "+val);
-//I'm going to number steppers as odd numbers, and servos even 
     val=(int)incomingInt/10;
+    Serial.println(val);
+//I'm going to number steppers as odd numbers, and servos even 
     switch(motorNum){
       case 1:
       case 3:
       case 5:
       case 7:
-              //steppers[motorNum/2].rotate((int)(val-stepperPos[3])*1700/110);
-              steppers[motorNum/2].rotate((int)200);
-              stepperPos[3]=val;
-              delay(20);
+              if(abs(val-stepperPos[motorNum/2])>5){
+                steppers[motorNum/2].rotate((int)(-val+stepperPos[motorNum/2])*1700/110);
+                //steppers[motorNum/2].rotate(100);
+                stepperPos[motorNum/2]=val;
+                //delay(20);
+              }
               break;
       case 2:
       case 4:
       case 6:
       case 8:servoPosition[motorNum/2-1]=val;
-      delay(5);
+      //delay(5);
             break;
     }
     
-    for(int i=0;i<4;i++){
+    /*for(int i=0;i<4;i++){
       servos[i].write(servoPosition[i]);
-    }
+      delay(10);
+    }*/
   }
 }

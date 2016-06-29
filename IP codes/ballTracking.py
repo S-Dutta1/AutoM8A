@@ -20,7 +20,7 @@ args = vars(ap.parse_args())
 ###################################################################  SET COMPort
 #ser = serial.Serial(port='COM3',baudrate=9600,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,\
 #    bytesize=serial.EIGHTBITS,timeout=0)
-ser = serial.Serial('/dev/ttyACM0', 9600)
+ser = serial.Serial('/dev/ttyACM0', 57600)
 
 sleep(0.2) #delay to allow arduino to reset
 
@@ -67,8 +67,12 @@ posy=0
 vel=[0,0]
 ################################       finding origin
 
-originLower=(90,110,186)
-originUpper=(106,244,246)
+originLower=(25,128,174)
+originUpper=(38,238,255)
+'''originLower=(90,110,186) #bottle's cap (wider range)
+originUpper=(106,244,246)'''
+'''originLower=(90,110,186) #bottle's cap
+originUpper=(106,246,255)'''
 tryc=1
 while tryc>0:
 	tryc=tryc+1
@@ -195,21 +199,25 @@ while True:
 	if posy>127 and posy<238:
 		y_est=posy
 	elif posy>=238:
-		y_est=237
+		y_est=238
 	elif posy<=127:
-		y_est=128
+		y_est=127
 
 	val=y_est*10+goalkeeper
-	temp=str(val).encode()
+	temp=str(val)#.encode()
 
 	'''val=int((y_est-128)/5)
 	temp=val*10+goalkeeper'''
-	ser.write(temp) #testing with the modulus
+	ser.write(temp+'\n') #testing with the modulus
 	#print("%d   %d" %(posy,val))
+
+
+
 	print ser.readline() # Read the newest output from the Arduino
+
+
+
 	#sleep(.01) # Delay for one tenth of a second
-
-
 	#if abs(stepper[3]-posy)<10 and (G-posx)<trigdist: #save goal
 		#ser.write(str(902).encode())
 
