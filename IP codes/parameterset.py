@@ -6,7 +6,7 @@ import argparse
 #import imutils
 from time import sleep
 import cv2
-#import serial   #PySerial package needs to be insatllled
+import serial   #PySerial package needs to be insatllled
 
 from datetime import datetime
 
@@ -20,7 +20,7 @@ args = vars(ap.parse_args())
 ###################################################################  SET COMPort
 #ser = serial.Serial(port='COM3',baudrate=9600,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,\
 #    bytesize=serial.EIGHTBITS,timeout=0)
-#ser = serial.Serial('/dev/ttyACM0', 57600)
+ser = serial.Serial('/dev/ttyACM0', 57600)
 
 #sleep(0.2) #delay to allow arduino to reset
 
@@ -36,7 +36,7 @@ args = vars(ap.parse_args())
 #greenLower = (94,95,170)
 #greenUpper = (108,170,255)
 #deepgreen ball
-greenLower = (40,45,155)
+greenLower = (34,111,155)
 greenUpper = (56,176,255)
 
 #black colour
@@ -64,40 +64,41 @@ print(datetime.now())
 #pos=[0,0]
 posx=0
 posy=0
-vel=[0,0]
-(originx,originy) = (100,100)
+vx=0
+vy=0
+(originx,originy) = (10,120)
 
 ################################             Motor control parameters
-A=10
-Apos=50
-Amax=100
-Amin=30
+A=170
+Apos=52
+Amax=123
+Amin=12
 attaker=7
 
-M=180
-Mpos=20
-Mmax=80
-Mmin=30
+M=326
+Mpos=49
+Mmax=84
+Mmin=9
 midfield=5
 
-D=280
-Dpos=50
-Dmax=80
-Dmin=30
+D=481
+Dpos=57
+Dmax=179
+Dmin=17
 defender=3
 
-G=480
-Gpos=140
-Gmax=80
-Gmin=30
+G=559
+Gpos=159
+Gmax=214
+Gmin=110
 goalkeeper=1
 
-Xlen=600
-Ylen=400
+Xlen=584
+Ylen=329
 
 trigdist=99
 
-################################
+################################0
 
 
 
@@ -264,6 +265,33 @@ while True:################################  2nd set
 
 	cv2.imshow("Frame", frame)
 
+	
+
+
+print "A="
+print A
+print Amax
+print Amin
+
+print "M="
+print M
+print Mmax
+print Mmin
+
+print "D="
+print D
+print Dmax
+print Dmin
+
+print "G="
+print G
+print Gmax
+print Gmin
+
+print "Xlen="
+print Xlen
+print "Ylen="
+print Ylen
 
 
 
@@ -348,12 +376,18 @@ while True:
 
 	##########################################   MOTOR CONTROL
 	##########################################################
+	#if abs(vx)>=1:
+	#	m=vy/vx
+	#else:
+	m=0
 
-	m=vy/vx
+	print(str(vx) +" , "+str(vy)+"   "+str(m)) 	
 
 	#################################################### goalkeeper
-	if xpos<G:
-		y_est=posy + (int)( m*(G-pox) )
+	'''if posx<G and vx>0:
+		y_est=posy + (int)( m*(G-posx) )
+		print("G  Y est = "+ str(y_est))
+		cv2.circle(frame,(originx + G,originy + y_est) , 8, (220, 205, 10), -1)
 		if y_est<0:
 			y_est=y_est * -1
 		if y_est>Ylen:
@@ -365,12 +399,39 @@ while True:
 			ser.write(str(Gmax*10 + goalkeeper)+'\n')
 		elif y_est<=Gmin:
 			ser.write(str(Gmin*10 + goalkeeper)+'\n')
+	'''
+	if posx<G and vx>0:
+		if posy>Gmin and posy<Gmax:
+			y_est=posy
+		elif posy>=Gmax:
+			y_est=Gmax
+		elif posy<=Gmin:
+			y_est=Gmin
+		ser.write(str(y_est*10 + goalkeeper)+'\n')
 
-	#if xpos<G and xpos>G-trigdist: #save goal
-		#ser.write(str(90*10 + goalkeeper+1)+'\n')
+	if posx<G and posx>G-trigdist: #save goal
+		ser.write(str(180*10 + goalkeeper+1)+'\n')
+		print("save goal")
 
+	#################################################### defender
+	'''if posx<D:
+		y_est=posy + (int)( m*(D-posx) )
+		if y_est<0:
+			y_est=y_est * -1
+		if y_est>Ylen:
+			y_est=2*Ylen - y_est 
 
+		if y_est>0 and y_est<Ylen/2:
+			ser.write(str(y_est*10 + defender)+'\n')
+		elif y_est>=Ylen/2:
+			ser.write(str(( y_est - (Ylen - Dmax+Dmin)  + Dmin)*10 + defender)+'\n')
+		
 
+	if posx<D and posx>D-trigdist: #defend
+		ser.write(str(90*10 + defender+1)+'\n')
+		print("D")
+'''
+	
 
 	
 	# loop over the set of tracked points
